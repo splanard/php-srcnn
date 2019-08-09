@@ -33,16 +33,17 @@ class SRCNN {
 	}
 	
 	public function forward( array $input ){
-		// TODO
+		$out = $input;
+		foreach($this->layers as $layer){
+			$out = $layer->forward( $out );
+		}
+		return $out;
 	}
 	
 	public function train( array $input, array $y_trues ){
 		for( $i=0; $i<100; $i++ ){
 			// Feed forward
-			$out = $this->layers[0]->forward( $input );
-			for($l=1, $maxl=count($this->layers); $l<$maxl; $l++){
-				$out = $this->layers[$l]->forward( $out );
-			}
+			$out = $this->forward( $input );
 			$loss = $this->loss->forward($out, $y_trues);
 			
 			// Initial gradient
@@ -50,7 +51,7 @@ class SRCNN {
 			
 			// Back propagation
 			foreach($this->layers as $layer){
-				
+				// TODO !
 			}
 		}
 	}

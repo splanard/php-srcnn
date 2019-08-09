@@ -1,8 +1,10 @@
 <?php
 require_once 'src/utils.php';
+require_once 'src/ConvolutionLayer.php';
 require_once 'src/ConvolutionFilter.php';
-require_once 'src/Normalization.php';
 require_once 'src/MSELoss.php';
+require_once 'src/Normalization.php';
+require_once 'src/SRCNN.php';
 
 define('R', 0);
 define('G', 1);
@@ -37,25 +39,20 @@ $box_blur = [
 ];
 
 // for each "feature map"/channel of an image (each color)
+/*
 foreach($sonic as $color){
 	$sonic_f[] = ConvolutionFilter::applyKernel($color, $sobel_vertical);
 }
+*/
 $normalization = Normalization::create(0, 255, true);
-$final = $normalization->forward( $sonic_f );
-rgb2jpg($final, "test.jpg");
+//$final = $normalization->forward( $sonic_f );
+//rgb2jpg($final, "sonic_sobelV.jpg");
 
-$true = [
-	[0, 1, 2],
-	[0, 1, 1],
-	[2, 1, 2]
-];
-$pred = [
-	[-1, 1, 3],
-	[1, 1, 2],
-	[2, 1, 1]
-];	
-echo( matrix2str( (new MESLoss())->rMSE_d1( $pred, $true ), 2) );
-
+$network = new SRCNN();
+$network->addLayer( ConvolutionLayer::create( 1, 3, 3, $sobel_vertical ) );
+$network->addLayer( $normalization );
+$out = $network->forward( $sonic );
+rgb2jpg([$out[0], $out[0], $out[0]], "test.jpg");
 
 function fmap2rgb( array $fmaps ){
 	return [
