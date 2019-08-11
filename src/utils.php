@@ -49,6 +49,21 @@ function matrix_padding( array $matrix, $padding_width = 1, $padding_value = 0 )
 }
 
 /**
+ * Revert the matrix given in input: first revert the order of the cells of each 
+ * line of the matrix, then revert the ordre of the lines.
+ * Like a symetry centered on the center of the matrix.
+ * 
+ * @param array $matrix the 2d-array to revert
+ * @return array the reverted matrix
+ */
+function matrix_reverse( array $matrix ){
+	for( $i=0, $maxi=count($matrix); $i<$maxi; $i++ ){
+		$matrix[$i] = array_reverse($matrix[$i]);
+	}
+	return array_reverse($matrix);
+}
+
+/**
  * Extract a sub-matrix from the given matrix (2D-array).
  * 
  * @param array $matrix
