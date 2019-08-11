@@ -1,7 +1,6 @@
 <?php
 require_once 'src/utils.php';
 require_once 'src/ConvolutionLayer.php';
-require_once 'src/ConvolutionFilter.php';
 require_once 'src/MSELoss.php';
 require_once 'src/Normalization.php';
 require_once 'src/SRCNN.php';
