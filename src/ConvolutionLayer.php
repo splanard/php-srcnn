@@ -23,13 +23,22 @@ class ConvolutionLayer implements Layer {
 	 */
 	private $filters;
 	
+	/**
+	 * The biases of the convolution layer. One bias for each filter.
+	 * @var array
+	 */
+	private $biases;
+	
 	public function backprop( array $d_L_d_out, $learn_rate ){
 		// TODO
 	}
 
 	public function forward( array $input ){
-		foreach( $this->filters as $filter ){
-			$out[] = $this->conv( $input, $filter ); // TODO: manage biases !
+		if( count($this->filters) != count($this->biases) ){
+			trigger_error("Wrong parametering of the convolution layer: there must be as many filters as biases", E_USER_ERROR);
+		}
+		for( $i=0, $maxi=count($this->filters); $i<$maxi; $i++ ){
+			$out[] = $this->conv( $input, $this->filters[$i], $this->biases[$i] );
 		}
 		return $out;
 	}
@@ -89,6 +98,7 @@ class ConvolutionLayer implements Layer {
 		for( $i=0; $i<$depth; $i++ ){
 			$instance->filters[0][] = $kernel_model; // TODO: remove kernel_model or make it optional
 		}
+		$instance->biases = [0];
 				
 		return $instance;
 	}
