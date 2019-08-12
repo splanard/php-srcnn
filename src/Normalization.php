@@ -7,13 +7,13 @@ class Normalization implements Layer {
 	 * The minimum value wanted after the normalization
 	 * @var number 
 	 */
-	private $min;
+	private $newMin;
 	
 	/**
 	 * The maximum value wanted after the normalization
 	 * @var number
 	 */
-	private $max;
+	private $newMax;
 	
 	/**
 	 * Do we need to round the results as integers ?
@@ -21,9 +21,9 @@ class Normalization implements Layer {
 	 */
 	private $round;
 	
-	private function __construct( $min, $max, $round ){
-		$this->min = $min;
-		$this->max = $max;
+	private function __construct( $new_min, $new_max, $round ){
+		$this->newMin = $new_min;
+		$this->newMax = $new_max;
 		$this->round = $round;
 	}
 	
@@ -32,15 +32,15 @@ class Normalization implements Layer {
 	 * @param array $input An array of one or more feature maps (2-dimensional arrays).
 	 * @return array The normalized input
 	 */
-	public function forward( array $input ){
+	public function forward( array $input, $old_min = null, $old_max = null ){
 		foreach( $input as $fmap ){
-			$i_min = rmin( $fmap );
-			$i_max = rmax( $fmap );
+			$i_min = isset( $old_min ) ? $old_min : rmin( $fmap );
+			$i_max = isset( $old_max ) ? $old_max : rmax( $fmap );
 			$H = count($fmap);
 			$W = count($fmap[0]);
 			for( $y=0; $y<$H; $y++ ){
 				for( $x=0; $x<$W; $x++ ){
-					$newval = ($fmap[$y][$x]-$i_min)/($i_max-$i_min)*($this->max - $this->min) + $this->min;
+					$newval = ($fmap[$y][$x]-$i_min)/($i_max-$i_min)*($this->newMax - $this->newMin) + $this->newMin;
 					$newfmap[$y][$x] = $this->round ? floor($newval) : $newval;
 				}
 			}
@@ -49,8 +49,8 @@ class Normalization implements Layer {
 		return $out;
 	}
 	
-	public function backprop( array $d_L_d_out, $learn_rate ){
-		// TODO
+	public function backprop( array $d_L_d_out ){
+		// TODO ?
 	}
 	
 	/**
@@ -58,23 +58,23 @@ class Normalization implements Layer {
 	 * @return array
 	 */
 	public function export(){
-		return [$this->min, $this->max, $this->round];
+		return [$this->newMin, $this->newMax, $this->round];
 	}
 	
 	/**
 	 * Instantiate the class with the given values.
 	 */
-	public static function create( $min, $max, $round = false ){
-		if( !is_numeric( $min ) || !is_numeric( $max ) ){
+	public static function create( $new_min, $max, $round = false ){
+		if( !is_numeric( $new_min ) || !is_numeric( $max ) ){
 			trigger_error("min and max arguments values must be numbers", E_USER_ERROR);
 		}
-		if( $min >= $max ){
+		if( $new_min >= $max ){
 			trigger_error("min must be smaller than max", E_USER_ERROR);
 		}
 		if( !is_bool( $round ) ){
 			trigger_error("round argument value must be a boolean", E_USER_ERROR);
 		}
-		return new self( $min, $max, $round );
+		return new self( $new_min, $max, $round );
 	}
 	
 	/**

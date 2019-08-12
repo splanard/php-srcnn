@@ -2,7 +2,7 @@
 require_once 'src/utils.php';
 require_once 'src/Loss.php';
 
-class MESLoss implements Loss {
+class MSELoss implements Loss {
 	
 	/**
 	 * The last processed input ($y_preds)
@@ -44,10 +44,13 @@ class MESLoss implements Loss {
 	 */
 	private function rMSE( array $pred, array $true ){
 		if( count($true) != count($pred) ){
-			trigger_error("given arrays must be the same size", E_USER_ERROR);
+			$msg = "given arrays must be the same size :".PHP_EOL
+					."\$pred: ". count( $pred ).PHP_EOL
+					."\$true: ". count( $true );
+			trigger_error($msg, E_USER_ERROR);
 		}
 		if( is_numeric( $pred[0] ) && is_numeric( $true[0] ) ){
-			$mse_array = array_map(function($t, $p){ return pow($t - $p, 2); }, $true, $pred );
+			$mse_array = array_map(function($a, $b){ return pow($a - $b, 2); }, $true, $pred );
 			return array_sum($mse_array) / count($mse_array);
 		}
 		
@@ -76,7 +79,7 @@ class MESLoss implements Loss {
 		}
 		
 		if( is_numeric( $pred[0] ) && is_numeric( $true[0] ) ){
-			return array_map(function($t, $p){ return -2*($t-$p); }, $true, $pred);
+			return array_map(function($a, $b){ return -2*($a-$b); }, $true, $pred);
 		}
 		
 		for( $i=0, $maxi=count($true); $i<$maxi; $i++ ){

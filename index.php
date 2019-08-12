@@ -1,8 +1,29 @@
 <?php
+ini_set('memory_limit', '256M');
+// Sobel filter (vertical)
+$sobel_vertical = [
+	[-1, 0, 1],
+	[-2, 0, 2],
+	[-1, 0, 1]
+];
+// Sobel filter (horizontal)
+$sobel_horizontal = [
+	[-1, -2, -1],
+	[0, 0, 0],
+	[1, 2, 1]
+];
+// Box blur filter
+$box_blur = [
+	[1/9, 1/9, 1/9],
+	[1/9, 1/9, 1/9],
+	[1/9, 1/9, 1/9]
+];
+
 require_once 'src/utils.php';
 require_once 'src/ConvolutionLayer.php';
 require_once 'src/MSELoss.php';
 require_once 'src/Normalization.php';
+require_once 'src/ReLu.php';
 require_once 'src/SRCNN.php';
 
 define('R', 0);
@@ -10,6 +31,7 @@ define('G', 1);
 define('B', 2);
 
 $sonic = jpg2rgb( "./resources/sonic.jpg" );
+$sonic_blur = jpg2rgb( "./resources/sonic_blur.jpg" );
 //$bw_sonic = jpg2rgb( "./resources/sonic.jpg", IMG_FILTER_GRAYSCALE );
 //echo rgb2str( $sonic );
 //rgb2png($bw_sonic, "test.png");
@@ -19,47 +41,22 @@ $sonic = jpg2rgb( "./resources/sonic.jpg" );
 //echo fmap2str($flat_sonic);
 //echo fmap2str( fmap_sub( $flat_sonic, 19, 22, 3, 3));
 
-// apply convolution to an image
-// Sobel filter (vertical)
-$sobel_vertical = [
-	[-1, 0, 1],
-	[-2, 0, 2],
-	[-1, 0, 1]
-];
-$sobel_horizontal = [
-	[-1, -2, -1],
-	[0, 0, 0],
-	[1, 2, 1]
-];
-$box_blur = [
-	[1/9, 1/9, 1/9],
-	[1/9, 1/9, 1/9],
-	[1/9, 1/9, 1/9]
-];
-
 // for each "feature map"/channel of an image (each color)
 /*
 foreach($sonic as $color){
 	$sonic_f[] = ConvolutionFilter::applyKernel($color, $sobel_vertical);
 }
 */
-$normalization = Normalization::create(0, 255, true);
 //$final = $normalization->forward( $sonic_f );
 //rgb2jpg($final, "sonic_sobelV.jpg");
 
 $network = new SRCNN();
-$network->addLayer( ConvolutionLayer::create( 1, 3, 3, $sobel_vertical ) );
-$network->addLayer( $normalization );
-$out = $network->forward( $sonic );
-rgb2jpg([$out[0], $out[0], $out[0]], "test.jpg");
-
-function fmap2rgb( array $fmaps ){
-	return [
-		'r' => $fmaps[0],
-		'g' => $fmaps[1],
-		'b' => $fmaps[2]
-	];
-}
+$network->addLayer( ConvolutionLayer::create( 6, 3, 9, 1E-6 ) );
+$network->addLayer( new ReLu() );
+$network->addLayer( ConvolutionLayer::create( 3, 6, 1, 1E-6 ) );
+$network->addLayer( new ReLu() );
+$network->addLayer( ConvolutionLayer::create( 3, 3, 5, 1E-7 ) );
+$network->train($sonic_blur, $sonic);
 
 function fmap_sub( array $fmap, $x, $y, $width, $height ){
 	$sub = [];
